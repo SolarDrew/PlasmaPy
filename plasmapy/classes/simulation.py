@@ -7,7 +7,7 @@ Classes and functionality for simulations.
 
 import numpy as np
 import astropy.units as u
-from ..numerical.spatial_solvers import Solver
+from ..numerical.spatial_solvers import Solver, shift
 from ..constants import mu0
 
 
@@ -221,7 +221,19 @@ class MHDSimulation:
         """
 
         vt = self.plasma.alfven_speed.max() + self.plasma.sound_speed.max()
-        visc = 0.8 * self.solver.dx[paramaxis] * vt
+        solver_3rd_order = Solver(self.solver.dx, method='forward', deriv=3)
+        solver_1st_order = Solver(self.solver.dx, method='forward', deriv=1)
+        d3i_par = solver_3rd_order(param, paramaxis)
+        d1i_par = solver_1st_order(param, paramaxis)
+        # maxes_ratio = np.nanmax(d3i_par) / np.nanmax(d1i_par)
+        maxes_ratio = windowmax(d3i_par, paramaxis) / windowmax(d1i_par, paramaxis)
+        maxes_ratio[np.isnan(maxes_ratio)] = 0.0 * maxes_ratio.unit
+        maxes_ratio[np.isinf(maxes_ratio)] = 0.0 * maxes_ratio.unit
+        # print(maxes_ratio[np.isfinite(maxes_ratio)])
+        # print(np.isnan(maxes_ratio).any())
+        c = 0.8 # * u.m**2
+        visc = c * self.solver.dx[paramaxis] * vt # * maxes_ratio
+        # print(param.max(), d3i_par.max(), d1i_par.max(), maxes_ratio)
         return visc
 
     def total_viscosity(self, param, paramaxis=0):
@@ -519,3 +531,27 @@ def vt_dot(vec, tensor):
                                                          tensor.shape[1:])
 
     return dot
+
+
+def windowmax(f, axis):
+    r"""Find the maximum of the given array over a 5-point window for each
+    point in the grid.
+
+    Parameters
+    ----------
+
+    f : Parameter
+        Array of values for which to find the 5-window maximum.
+
+    axis : int [0 | 1 | 2]
+        Direction in which to calculate the maxima. 0, 1, and 2 correspond to
+        the x, y and z axes, respectively.
+    """
+
+    padding = [(0, 0)] * len(f.shape)
+    padding[axis] = (4, 4)
+    f = np.pad(f, padding, 'edge') * f.unit
+    maxvals = np.array([f[shift(f.shape, i, axis)]
+                        for i in range(-1, 2)]).max(axis=0)
+
+    return maxvals * f.unit
