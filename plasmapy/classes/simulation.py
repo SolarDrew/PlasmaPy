@@ -385,44 +385,6 @@ def div(vec, solver):
     return divergence
 
 
-def curl(vec, solver):
-    r"""Calculates the curl of a vector field.
-
-    Parameters
-    ----------
-
-    vec : array-like, shape=(3, x, [y, z])
-        3-dimensional vector field.
-
-    Returns
-    -------
-
-    curl : numpy.ndarray, shape=(3, x, [y, z])
-        Vector field corresponding to the curl of the input vector field.
-
-        .. math::
-
-           \vec{a} = \nabla \times \vec{v}
-    """
-
-    assert vec.shape[0] == 3, "First argument provided is not a vector field"
-    assert len(solver.dx) == len(vec.shape[1:]), """
-        Number of grid step sizes ({}) != to dimensionality of field ({})
-        """.format(len(solver.dx), len(vec.shape[1:]))
-
-    curl = np.zeros(vec.shape) * vec.unit / solver.dx.unit
-    for k in range(3):
-        for l in range(3):
-            for m in range(3):
-                try:
-                    curl[k] += levi_civita3d(k, l, m) * solver(vec[m], l,
-                                                               solver.dx[l])
-                except IndexError:
-                    pass
-
-    return curl
-
-
 def vdp(vec1, vec2):
     r"""Calculate the Vector Direct Product of two vectors.
 
