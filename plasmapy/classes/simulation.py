@@ -227,12 +227,12 @@ class MHDSimulation:
         d1i_par = solver_1st_order(param, paramaxis)
         # maxes_ratio = np.nanmax(d3i_par) / np.nanmax(d1i_par)
         maxes_ratio = windowmax(d3i_par, paramaxis) / windowmax(d1i_par, paramaxis)
+        print(maxes_ratio[np.isfinite(maxes_ratio)])
         maxes_ratio[np.isnan(maxes_ratio)] = 0.0 * maxes_ratio.unit
         maxes_ratio[np.isinf(maxes_ratio)] = 0.0 * maxes_ratio.unit
-        # print(maxes_ratio[np.isfinite(maxes_ratio)])
         # print(np.isnan(maxes_ratio).any())
-        c = 0.8 # * u.m**2
-        visc = c * self.solver.dx[paramaxis] * vt # * maxes_ratio
+        c = 0.8 * u.m**2
+        visc = c * self.solver.dx[paramaxis] * vt * maxes_ratio
         # print(param.max(), d3i_par.max(), d1i_par.max(), maxes_ratio)
         return visc
 
