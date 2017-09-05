@@ -207,7 +207,7 @@ class MHDSimulation:
             * (u.m**2 / u.s**2)
 
         # This is fudged to work on the assumption that the tensor is symmetric
-        visctens[0, 0] = (visc[0] * v_solver(v[0], 0)) * 2
+        visctens[0, 0] = (visc * v_solver(v[0], 0)) * 2
         visctens *= 0.5 * rho
 
         assert visctens.shape == (3, 3, *self.plasma.domain_shape), \
@@ -512,7 +512,7 @@ def windowmax(f, axis):
 
     padding = [(0, 0)] * len(f.shape)
     padding[axis] = (4, 4)
-    f = np.pad(f, padding, 'edge') * f.unit
+    f = abs(np.pad(f.si, padding, 'edge')) * f.unit
     maxvals = np.array([f[shift(f.shape, i, axis)]
                         for i in range(-1, 2)]).max(axis=0)
 
