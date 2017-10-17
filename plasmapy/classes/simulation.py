@@ -231,7 +231,11 @@ class MHDSimulation:
         maxes_ratio[np.isnan(maxes_ratio)] = 0.0 * maxes_ratio.unit
         maxes_ratio[np.isinf(maxes_ratio)] = 0.0 * maxes_ratio.unit
         # print(np.isnan(maxes_ratio).any())
-        c = 0.8 * u.m**2
+        if param is self.plasma.energy or param is self.plasma.density:
+            c = 0.04 * u.m**2
+        else:
+            c = 0.4 * u.m**2
+        print(c, self.solver.dx[paramaxis], vt.si)
         visc = c * self.solver.dx[paramaxis] * vt * maxes_ratio
         # print(param.max(), d3i_par.max(), d1i_par.max(), maxes_ratio)
         return visc
@@ -240,8 +244,8 @@ class MHDSimulation:
         """
         """
 
-        return self.hyperdiff_viscosity(param, paramaxis) \
-            + self.shock_viscosity(paramaxis)
+        return self.hyperdiff_viscosity(param, paramaxis)# \
+            # + self.shock_viscosity(paramaxis)
 
 
 def dot(vec1, vec2):
